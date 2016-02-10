@@ -1,0 +1,65 @@
+%% Elemental two-phase new fuller test runner
+
+addpath(genpath('/home/bootland/Documents/MATLAB/Modified ifiss3.3/ifiss3.3'))
+cd('/home/bootland/Documents/MATLAB/Modified ifiss3.3/ifiss3.3/datafiles')
+
+testrun = 1;
+
+RE = [10; 100; 1000];
+L = [5; 6; 7; 8];
+VISCD = [10; 100; 1000; 10000];
+DENSD = [1];
+TS = [0];
+
+lRE = length(RE);
+lL = length(L);
+lVISCD = length(VISCD);
+lDENSD = length(DENSD);
+lTS = length(TS);
+
+save('testrun.mat','testrun','L','RE','VISCD','DENSD','lRE','lL','lVISCD','lDENSD','TS','lTS')
+
+resvecs = cell(lTS*lRE*lL*lDENSD*lVISCD,8);
+save('results_my_two_phase_pcd_1.mat','L','RE','VISCD','DENSD','TS','resvecs')
+
+for s = 1:lTS
+    timestep = TS(s);
+    for r = 1:lRE
+        Re = RE(r);
+        for l = 1:lL
+            gp = L(l);
+            % Each plot
+            for v = 1:lVISCD
+                for d = 1:lDENSD
+                    testrun = 1;
+                    viscd = VISCD(v);
+                    densd = DENSD(d);
+                    save('testrun.mat','gp','Re','viscd','densd','timestep','r','l','v','d','s','-append')
+                    navier_testproblem
+                    %   clear variables
+                    load('testrun.mat')
+                    load('results_my_two_phase_pcd_1.mat')
+                    pcnd = 2; pcndf = 2;
+                    it_solve_2s
+                    ind = d+(v-1)*lDENSD+(l-1)*lDENSD*lVISCD+(r-1)*lDENSD*lVISCD*lL+(s-1)*lDENSD*lVISCD*lL*lRE;
+                    resvecs{ind,1} = Re;
+                    resvecs{ind,2} = gp;
+                    resvecs{ind,3} = viscd;
+                    resvecs{ind,4} = densd;
+                    resvecs{ind,5} = timestep;
+                    resvecs{ind,6} = iter;
+                    resvecs{ind,7} = etoc;
+                    resvecs{ind,8} = resvec;
+                    save('results_my_two_phase_pcd_1.mat','resvecs','-append')
+                end
+            end
+            % Do plot stuff here
+            figno = l + (r-1)*lL;
+            filename = strcat('Elemental_new_fuller_Re',num2str(Re),'_l',num2str(gp));
+            savefig(figure(figno),filename)
+        end
+    end
+end
+
+testrun = 0;
+save('testrun.mat','testrun','-append')
